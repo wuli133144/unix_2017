@@ -17,11 +17,13 @@ int doit(int argc,char **argv){
     switch (pid)
     {
         case 0:{//child proc
+            WAIT_PARENT()//first run must be parent proc
             printx("output from child\n");
             break;
         }
         default:
             printx("output from parent\n");
+            TELL_CHILD(pid);//active child proc
             break;
     }
     exit(0);
