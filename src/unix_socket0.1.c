@@ -3,6 +3,10 @@
 #include <unistd.h>
 #include <stdarg.h>
 
+
+#include <sys/wait.h>
+
+
 #include "err.h"
 
 
@@ -51,6 +55,22 @@
 
 /*@Fork end@*/
 
+/*@pr_exit start@*/
+
+void pr_exit(int status){
+    if(WIFEXITED(status)){
+        printf("normal termination ,exit status=%d\n",WEXITSTATUS(status));
+    }
+    else if(WIFSIGNALED(status)){
+      printf("abnormal ternination ,signal,number=%d",WTERMSIG(status));
+    }
+
+
+
+}
+
+/*@pr_exit end@*/
+
 
 static int doit(int,char **);
 
@@ -65,32 +85,36 @@ int main(int argc,char **argv){
 
 /*@doit  create by jackwu@*/
 
-int g_val=6;
-char buf[]="jackwu is number one";
+
 
 int doit(int argc,char **argv){
    
-   int var=88;
    pid_t pid;
-      
-    pid=Fork();
-    if(pid==0){
-      //child proc
-      var++;
-      g_val++;
-    }else{
-        sleep(2);
-     }
+   int status;
+   if((pid=fork())<0){
+     err_sys("fork error");
+   }else if(pid==0){
+     exit(7);
+   }
 
-  printf("pid=%d g_val=%d val=%d\n",getpid(),g_val,var);
+   if(wait(&status)!=pid){
+      err_sys("wait error");
+   }
+   pr_exit(status);
   
- //_error(argc<2,doit_end,"%s","jackwu");
 
-    return 0;
-// doit_end:
-//    exit(0);
+  /*@next @*/
+if((pid=fork())<0){
+     err_sys("fork error");
+   }else if(pid==0){
+    abort();
+   }
+   if(wait(&status)!=pid){
+      err_sys("wait error");
+   }
+   pr_exit(status);
 
-
-
+  
+  exit(0);
 
 }
